@@ -2,10 +2,12 @@ FROM centos:latest
 
 ENV VERSION 4.0.8
 ENV PLUGINS_VERSION 2.0.3
+ENV API_VERSION 1.0.0
 ENV FPING_VERSION 3.10
 
 RUN yum -y update; yum clean all;
 RUN yum -y install \
+	java-1.8.0-openjdk \
 	wget \
 	tar \
 	httpd \
@@ -79,6 +81,7 @@ RUN cd /tmp/nagios-plugins; \
 	make install;
 
 EXPOSE 80
+EXPOSE 5000
 
 RUN mv /usr/local/nagios/etc /config
 RUN ln -s /config /usr/local/nagios/etc
@@ -90,6 +93,7 @@ VOLUME /data
 
 RUN /usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg
 
+RUN wget https://bitbucket.org/collabsoft/mvn-repository/src/HEAD/net/collabsoft/nagios-api/$API_VERSION/nagios-api-$API_VERSION-jar-with-dependencies.jar?at=releases --output-document=/opt/nagios-api.jar
 COPY ./start.sh /opt/start.sh
 RUN chmod +x /opt/start.sh
 CMD /opt/start.sh
