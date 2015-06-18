@@ -78,6 +78,8 @@ RUN cd /tmp/nagios-plugins; \
 	make all; \
 	make install;
 
+EXPOSE 80
+
 RUN mv /usr/local/nagios/etc /config
 RUN ln -s /config /usr/local/nagios/etc
 VOLUME /config
