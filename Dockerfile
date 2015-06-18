@@ -2,7 +2,7 @@ FROM centos:latest
 
 ENV VERSION 4.0.8
 ENV PLUGINS_VERSION 2.0.3
-ENV API_VERSION 1.0.0
+ENV API_VERSION 1.0.1
 ENV FPING_VERSION 3.10
 
 RUN yum -y update; yum clean all;

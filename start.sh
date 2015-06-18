@@ -7,6 +7,6 @@ do
     printf '.'
     sleep 2
 done
+java -jar /opt/nagios-api.jar file -f /usr/local/nagios/var/status.dat -p 5000 -d &> /dev/null
 
-echo 
-java -jar /opt/nagios-api.jar file -f /usr/local/nagios/var/status.dat -p 5000
+tail -f -n 5000 /data/nagios.log
