@@ -1,5 +1,5 @@
 /usr/sbin/httpd -k start
-/etc/init.d/nagios start
+/usr/local/nagios/bin/nagios -d /config/nagios.cfg
 
 echo 'Waiting for Nagios to start'
 while [ ! -f /usr/local/nagios/var/status.dat ]
