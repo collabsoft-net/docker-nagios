@@ -1,9 +1,12 @@
 FROM centos:latest
 
-ENV VERSION 4.0.8
-ENV PLUGINS_VERSION 2.0.3
+ENV VERSION 4.3.1
+ENV PLUGINS_VERSION 2.1.4
 ENV API_VERSION 1.0.1
 ENV FPING_VERSION 3.10
+
+ENV NAGIOS_USERNAME=nagiosadmin
+ENV NAGIOS_PASSWORD=nagiosadmin
 
 RUN yum -y update; yum clean all;
 RUN yum -y install \
@@ -72,7 +75,7 @@ RUN cd /tmp/nagios; \
 	make install-config; \
 	make install-commandmode; \
 	make install-webconf; \
-	htpasswd -bc /usr/local/nagios/etc/htpasswd.users nagiosadmin nagiosadmin; \
+	htpasswd -bc /usr/local/nagios/etc/htpasswd.users $NAGIOS_USERNAME $NAGIOS_PASSWORD; \
 	echo "RedirectMatch ^/$ /nagios" > /etc/httpd/conf.d/redirect.conf;
 
 RUN cd /tmp/nagios-plugins; \
@@ -87,13 +90,15 @@ RUN mv /usr/local/nagios/etc /config
 RUN ln -s /config /usr/local/nagios/etc
 VOLUME /config
 
+RUN mkdir -p /usr/local/nagios/var/spool/checkresults
 RUN mv /usr/local/nagios/var /data
 RUN ln -s /data /usr/local/nagios/var
+RUN chown -R nagios:nagcmd /data
 VOLUME /data
 
 RUN /usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg
 
-RUN wget https://bitbucket.org/collabsoft/mvn-repository/src/HEAD/net/collabsoft/nagios-api/$API_VERSION/nagios-api-$API_VERSION-jar-with-dependencies.jar?at=releases --output-document=/opt/nagios-api.jar
+RUN wget https://bitbucket.org/collabsoft/mvn-repository/raw/882d7bffb03277c22bd5728fe224fee3e8422d4e/net/collabsoft/nagios-api/1.0.1/nagios-api-1.0.1-jar-with-dependencies.jar --output-document=/opt/nagios-api.jar
 COPY ./start.sh /opt/start.sh
 RUN chmod +x /opt/start.sh
 CMD /opt/start.sh
