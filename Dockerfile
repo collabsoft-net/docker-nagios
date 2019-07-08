@@ -16,6 +16,7 @@ ENV NAGIOS_PASSWORD=nagiosadmin
 RUN yum -y update; yum clean all; \
 	yum -y install \
 	java-1.8.0-openjdk \
+	unzip \
 	wget \
 	tar \
 	httpd \
