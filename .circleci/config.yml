@@ -22,11 +22,13 @@ jobs:
 
       - run:
           command: |
-              versions=( "4.3.1" "4.3.2" "4.3.3" )
-              for VERSION in "${versions[@]}"
-              do
-                docker build --build-arg VERSION=$VERSION -t remie/docker-nagios .
-                if [ "${CIRCLE_BRANCH}" == "master" ]; then
-                  docker tag remie/docker-nagios remie/docker-nagios:$VERSION
-                  docker push
-                fi
+            versions=( "4.3.1" "4.3.2" "4.3.3" )
+            for VERSION in "${versions[@]}"
+            do
+              echo "Building for Nagios $VERSION"
+              docker build --build-arg VERSION=$VERSION -t remie/docker-nagios .
+              if [ "${CIRCLE_BRANCH}" == "master" ]; then
+                docker tag remie/docker-nagios remie/docker-nagios:$VERSION
+                docker push
+              fi
+            done

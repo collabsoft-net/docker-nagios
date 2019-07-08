@@ -1,7 +1,7 @@
 FROM centos:latest
 
 ## Build arguments
-ARG VERSION 4.0.0
+ARG VERSION
 
 ## Environment variables
 ENV VERSION ${VERSION:-4.0.0}
