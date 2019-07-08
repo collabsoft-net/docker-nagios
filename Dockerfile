@@ -1,7 +1,10 @@
 FROM centos:latest
 
+## Build arguments
+ARG VERSION 4.0.0
+
 ## Environment variables
-ENV VERSION 4.3.1
+ENV VERSION ${VERSION:-4.0.0}
 ENV PLUGINS_VERSION 2.1.4
 ENV API_VERSION 1.0.1
 ENV FPING_VERSION 3.10

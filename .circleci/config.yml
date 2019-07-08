@@ -1,0 +1,32 @@
+
+version: 2
+jobs:
+
+  build:
+
+    docker:
+      - image: circleci/node:8
+
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="18.06.1-ce"
+            sudo curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            sudo tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            sudo mv /tmp/docker/* /usr/bin
+
+      - run:
+          command: |
+              versions=( "4.3.1" "4.3.2" "4.3.3" )
+              for VERSION in "${versions[@]}"
+              do
+                docker build --build-arg VERSION=$VERSION -t remie/docker-nagios .
+                if [ "${CIRCLE_BRANCH}" == "master" ]; then
+                  docker tag remie/docker-nagios remie/docker-nagios:$VERSION
+                  docker push
+                fi
