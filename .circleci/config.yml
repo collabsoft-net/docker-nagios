@@ -26,9 +26,8 @@ jobs:
             for VERSION in "${versions[@]}"
             do
               echo "Building for Nagios $VERSION"
-              docker build --build-arg VERSION=$VERSION -t remie/docker-nagios .
+              docker build --build-arg VERSION=$VERSION -t remie/docker-nagios:$VERSION .
               if [ "${CIRCLE_BRANCH}" == "master" ]; then
-                docker tag remie/docker-nagios remie/docker-nagios:$VERSION
-                docker push
+                docker push remie/docker-nagios:$VERSION
               fi
             done
