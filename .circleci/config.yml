@@ -48,7 +48,7 @@ commands:
           name: Nagios Core
           command: |
             echo "Building Nagios << parameters.version >> - Core"
-            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core ./core/Dockerfile
+            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core ./core
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker push remie/docker-nagios:<< parameters.version >>-core
             fi
@@ -63,7 +63,7 @@ commands:
           name: Nagios Core+Web
           command: |
             echo "Building for Nagios << parameters.version >> - Core + Web UI"
-            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core-web ./core-web/Dockerfile
+            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core-web ./core-web
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker push remie/docker-nagios:<< parameters.version >>-core-web
             fi
@@ -80,7 +80,7 @@ commands:
           name: Nagios Core+Web+Plugins
           command: |
             echo "Building for Nagios << parameters.version >> - Core + Web UI + Plugins"
-            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core-web-plugins ./core-web-plugins/Dockerfile
+            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core-web-plugins ./core-web-plugins
 
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker push remie/docker-nagios:<< parameters.version >>
