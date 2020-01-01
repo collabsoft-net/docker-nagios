@@ -79,6 +79,7 @@ commands:
           command: |
             echo "Building for Nagios << parameters.version >> - Core + Web UI + Plugins"
             docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core-web-plugins ./core-web-plugins
+            docker tag remie/docker-nagios:<< parameters.version >>-core-web-plugins remie/docker-nagios:<< parameters.version >>
 
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker push remie/docker-nagios:<< parameters.version >>
