@@ -9,6 +9,7 @@ ENV VERSION ${VERSION:-4.0.0}
 ## Install & prepare dependencies and Nagios Core
 RUN apt-get -y update; \
 	apt-get -y install \
+	unzip \
 	wget \
 	make \
 	gcc \
@@ -46,6 +47,7 @@ RUN apt-get -y update; \
 	chown -R nagios:nagcmd /data; \
 	\
 	apt-get -y remove \
+	unzip \
 	wget \
 	make \
 	gcc; \
