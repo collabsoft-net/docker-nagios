@@ -9,11 +9,9 @@ ENV VERSION ${VERSION:-4.0.0}
 ## Install & prepare dependencies and Nagios Core
 RUN apt-get -y update; \
 	apt-get -y install \
-  ## compile-time
 	wget \
 	make \
 	gcc \
-  ## run-time
   perl; \
 	\
 	/usr/sbin/useradd -m nagios; \
