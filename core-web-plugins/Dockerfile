@@ -1,47 +1,47 @@
-FROM centos:7
+FROM ubuntu:18.04
 
 ## Build arguments
 ARG VERSION
 
 ## Environment variables
 ENV VERSION ${VERSION:-4.0.0}
-ENV PLUGINS_VERSION 2.1.4
+ENV PLUGINS_VERSION 2.3.1
 ENV API_VERSION 1.0.1
 ENV FPING_VERSION 3.10
 
 ENV NAGIOS_USERNAME=nagiosadmin
 ENV NAGIOS_PASSWORD=nagiosadmin
 
-## Install & prepare dependencies, Nagios Core and Nagios Plugins
-RUN yum -y update; yum clean all; \
-	yum -y install \
-	java-1.8.0-openjdk \
+## Install & prepare dependencies and Nagios Core
+RUN apt-get -y update; \
+	DEBIAN_FRONTEND=noninteractive apt-get -yq install \
 	unzip \
 	wget \
-	tar \
-	httpd \
-	php \
-	make \
-	perl \
-	gcc \
-	glibc \
-	glibc-common \
-	gd \
-	gd-devel \
-	openssl \
-	openssl-devel \
-	openssh-clients \
-	samba-client \
-	net-snmp \
-	net-snmp-utils \
-	openssh \
-	bind-utils \ 
-	freeradius-devel \
-	openldap-devel \
-	libdbi-devel \
-	postgresql-devel \
-	mysql-devel \
-	perl-CPAN; \
+  gcc \
+  make \
+  libc6 \
+  build-essential \
+  autoconf \
+  libmcrypt-dev \
+  libssl-dev \
+  bc \
+  gawk \
+  dc \
+  snmp \
+  libnet-snmp-perl \
+  gettext \ 
+  libpqxx3-dev \
+  libdbi-dev \
+  libldap2-dev \
+  libmysqlclient-dev \
+  dnsutils \
+  smbclient \
+  qstat \
+  fping \
+  opensmtpd \
+  ssh \
+  apache2 \
+  perl; \
 	\
 	perl -MCPAN -Mlocal::lib=~/perl5 -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'; \
 	cpan install \
@@ -50,15 +50,14 @@ RUN yum -y update; yum clean all; \
 	Crypt::CBC \
 	Net::SNMP; \
 	\
-	mkdir /tmp/fping; \
-	wget http://fping.org/dist/fping-$FPING_VERSION.tar.gz --output-document=/tmp/fping.tar.gz; \
-	cd /tmp; tar -xaf /tmp/fping.tar.gz --strip-components=1 --directory=/tmp/fping/; \
-	cd /tmp/fping; \
+	mkdir /tmp/freeradius; \
+  wget https://github.com/FreeRADIUS/freeradius-client/archive/release_1_1_7.tar.gz --output-document=/tmp/freeradius.tar.gz; \
+	cd /tmp; tar -xaf /tmp/freeradius.tar.gz --strip-components=1 --directory=/tmp/freeradius/; \
+	cd /tmp/freeradius; \
 	./configure; \
 	make all; \
 	make install; \
-	chmod u+s /bin/ping; \
-	rm -rf /tmp/fping; \
+	rm -rf /tmp/freeradius*; \
 	\
 	/usr/sbin/useradd -m nagios; \
 	/usr/sbin/groupadd nagcmd; \
@@ -69,11 +68,11 @@ RUN yum -y update; yum clean all; \
 	wget http://downloads.sourceforge.net/project/nagios/nagios-4.x/nagios-$VERSION/nagios-$VERSION.tar.gz --output-document=/tmp/nagios.tar.gz; \
 	cd /tmp; tar -xaf /tmp/nagios.tar.gz --strip-components=1 --directory=/tmp/nagios/; \
 	cd /tmp/nagios; \
-	./configure --with-command-group=nagcmd; \
+	./configure --with-command-group=nagcmd --with-httpd-conf=/etc/apache2/sites-available; \
 	make all; \
 	make install; \
 	make install-init; \
-	make install-config; \
+  make install-config; \
 	make install-commandmode; \
 	make install-webconf; \
 	rm -rf /tmp/nagios; \
@@ -90,11 +89,7 @@ RUN yum -y update; yum clean all; \
 	rm -rf /tmp/nagios-plugins.tar.gz; \
 	\
 	htpasswd -bc /usr/local/nagios/etc/htpasswd.users $NAGIOS_USERNAME $NAGIOS_PASSWORD; \
-	echo "RedirectMatch ^/$ /nagios" > /etc/httpd/conf.d/redirect.conf; \
-	echo "ProxyPass /api http://localhost:5000" > /etc/httpd/conf.d/nagios-api.conf; \
-	echo "ProxyPassReverse /api http://localhost:5000" >> /etc/httpd/conf.d/nagios-api.conf; \
-	echo "ProxyPass /rest http://localhost:5000/rest" >> /etc/httpd/conf.d/nagios-api.conf; \
-	echo "ProxyPassReverse /rest http://localhost:5000/rest" >> /etc/httpd/conf.d/nagios-api.conf; \
+	echo "RedirectMatch ^/$ /nagios" > /etc/apache2/sites-available/redirect.conf; \
 	\
 	mv /usr/local/nagios/etc /config; \
 	ln -s /config /usr/local/nagios/etc; \
@@ -105,10 +100,14 @@ RUN yum -y update; yum clean all; \
 	ln -s /data /usr/local/nagios/var; \
 	chown -R nagios:nagcmd /data; \
 	\
-	/usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg;
-
-## Download Nagios API
-ADD http://repository.collabsoft.net/releases/net/collabsoft/nagios-api/$API_VERSION/nagios-api-$API_VERSION-jar-with-dependencies.jar /opt/nagios-api.jar;
+	/usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg; \
+	\
+	apt-get -y remove \
+	unzip \
+	wget \
+  gcc \
+  make; \
+  apt -y autoremove;
 
 ## Copy startup script
 COPY ./start.sh /opt/start.sh
@@ -116,7 +115,6 @@ RUN chmod +x /opt/start.sh
 
 ## Expose ports and volumes
 EXPOSE 80
-EXPOSE 5000
 VOLUME /config
 VOLUME /data
 

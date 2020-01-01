@@ -1,16 +1,33 @@
-
-version: 2
+version: 2.1
 jobs:
 
-  build:
+  build-deploy:
+    executor: nagios
+    parameters:
+      version:
+        type: string
+      latest:
+        type: string
+        default: "false"
+    steps:
+      - core:
+          version: << parameters.version >>
+      - core-web:
+          version: << parameters.version >>
+      - core-web-plugins:
+          version: << parameters.version >>
+          latest: << parameters.latest >>
 
+executors:
+  nagios:
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:10
 
+commands:
+  common:
     steps:
       - checkout
       - setup_remote_docker
-
       - run:
           name: Install Docker client
           command: |
@@ -21,19 +38,85 @@ jobs:
             sudo mv /tmp/docker/* /usr/bin
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
+  core:
+    parameters:
+      version:
+        type: string
+    steps:
+      - common
       - run:
+          name: Nagios Core
           command: |
-            LATEST="4.4.3"
-            versions=( "4.3.0" "4.3.1" "4.3.2" "4.3.3" "4.3.4" "4.4.0" "4.4.1" "4.4.2" "4.4.3" "4.4.4" "4.4.5")
-            for VERSION in "${versions[@]}"
-            do
-              echo "Building for Nagios $VERSION"
-              docker build --build-arg VERSION=$VERSION -t remie/docker-nagios:$VERSION .
-              if [ "${CIRCLE_BRANCH}" == "master" ]; then
-                docker push remie/docker-nagios:$VERSION
-                if [ "${VERSION}" == "$LATEST" ]; then
-                  docker tag remie/docker-nagios:$VERSION remie/docker-nagios:latest
-                  docker push remie/docker-nagios:latest
-                fi
+            echo "Building Nagios << parameters.version >> - Core"
+            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core ./core/Dockerfile
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker push remie/docker-nagios:<< parameters.version >>-core
+            fi
+
+  core-web:
+    parameters:
+      version:
+        type: string
+    steps:
+      - common
+      - run:
+          name: Nagios Core+Web
+          command: |
+            echo "Building for Nagios << parameters.version >> - Core + Web UI"
+            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core-web ./core-web/Dockerfile
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker push remie/docker-nagios:<< parameters.version >>-core-web
+            fi
+
+  core-web-plugins:
+    parameters:
+      version:
+        type: string
+      latest:
+        type: string
+    steps:
+      - common
+      - run:
+          name: Nagios Core+Web+Plugins
+          command: |
+            echo "Building for Nagios << parameters.version >> - Core + Web UI + Plugins"
+            docker build --build-arg VERSION=<< parameters.version >> -t remie/docker-nagios:<< parameters.version >>-core-web-plugins ./core-web-plugins/Dockerfile
+
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker push remie/docker-nagios:<< parameters.version >>
+              docker push remie/docker-nagios:<< parameters.version >>-core-web-plugins
+              if [ "<< parameters.latest >>" == "true" ]; then
+                docker tag remie/docker-nagios:<< parameters.version >>-core-web-plugins remie/docker-nagios:latest
+                docker push remie/docker-nagios:latest
               fi
-            done
+            fi
+
+            
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - build-deploy:
+          version: 4.3.0
+      - build-deploy:
+          version: 4.3.1
+      - build-deploy:
+          version: 4.3.2
+      - build-deploy:
+          version: 4.3.3
+      - build-deploy:
+          version: 4.3.4
+      - build-deploy:
+          version: 4.4.0
+      - build-deploy:
+          version: 4.4.1
+      - build-deploy:
+          version: 4.4.2
+      - build-deploy:
+          version: 4.4.3
+      - build-deploy:
+          version: 4.4.4
+      - build-deploy:
+          version: 4.4.5
+          latest: "true"
