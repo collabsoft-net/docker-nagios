@@ -10,6 +10,7 @@ jobs:
         type: string
         default: "false"
     steps:
+      - common
       - core:
           version: << parameters.version >>
       - core-web:
@@ -43,7 +44,6 @@ commands:
       version:
         type: string
     steps:
-      - common
       - run:
           name: Nagios Core
           command: |
@@ -58,7 +58,6 @@ commands:
       version:
         type: string
     steps:
-      - common
       - run:
           name: Nagios Core+Web
           command: |
@@ -75,7 +74,6 @@ commands:
       latest:
         type: string
     steps:
-      - common
       - run:
           name: Nagios Core+Web+Plugins
           command: |
